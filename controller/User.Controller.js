@@ -1,3 +1,4 @@
+const Due = require("../models/Due");
 const User = require("../models/User");
 
 /**
@@ -17,10 +18,13 @@ const findAndCheckDueController = async (req, res, next) => {
     const user = await User.findOne({ user_phone });
 
     if (user) {
-      // If user found, return user info
+      // If user found, find all due records for this user
+      const dues = await Due.find({ userId: user._id });
+
       return res.status(200).json({
         message: "User found successfully",
         user,
+        dues: dues, // Return all due records for the user
       });
     } else {
       // If user not found, return "not found" message
@@ -34,6 +38,60 @@ const findAndCheckDueController = async (req, res, next) => {
   }
 };
 
+/**
+ *
+ *  * find the user
+ *  * if find then create his due
+ *  * else if create a new user and create his due
+ */
+const createUserAndDueController = async (req, res, next) => {
+  const {
+    user_phone,
+    details,
+    subTotal,
+    discount,
+    total,
+    accountReceived,
+    due,
+  } = req.body;
+
+  console.log("this is log ", req.body);
+
+  try {
+    // Find the user by phone number
+    let user = await User.findOne({ user_phone });
+
+    if (!user) {
+      // If user not found, create a new user
+      user = new User({ user_phone });
+      await user.save();
+    }
+
+    // Create due for the user
+    const dueData = {
+      userId: user._id, // Use the user's ID
+      details,
+      subTotal,
+      discount,
+      total,
+      accountReceived,
+      due,
+    };
+    const newDue = new Due(dueData);
+    await newDue.save();
+
+    return res.status(201).json({
+      message: "User and due created successfully",
+      user,
+      due: newDue,
+    });
+  } catch (error) {
+    // Handle errors
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
 module.exports = {
   findAndCheckDueController,
+  createUserAndDueController,
 };
