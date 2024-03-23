@@ -8,7 +8,7 @@ const userSchema = new Schema({
     required: false, // Optional field
   },
   user_phone: {
-    type: Number,
+    type: String,
     required: true, // Mandatory field
   },
   user_address: {
