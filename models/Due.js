@@ -13,8 +13,15 @@ const dueSchema = new Schema({
     default: Date.now, // Default value will be current date/time
   },
   details: {
-    type: [String], // Array of strings for details
-    required: true,
+    type: [
+      {
+        name: { type: String, required: true },
+        price: { type: Number, required: true },
+        qty: { type: Number, required: true },
+        total: { type: Number, required: true },
+      },
+    ],
+    default: [],
   },
   subTotal: {
     type: Number,
