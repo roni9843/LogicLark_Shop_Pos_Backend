@@ -53,6 +53,7 @@ const createUserAndDueController = async (req, res, next) => {
     total,
     accountReceived,
     due,
+    user_name,
   } = req.body;
 
   console.log("this is log ", req.body);
@@ -63,7 +64,7 @@ const createUserAndDueController = async (req, res, next) => {
 
     if (!user) {
       // If user not found, create a new user
-      user = new User({ user_phone });
+      user = new User({ user_phone, user_name });
       await user.save();
     }
 
@@ -76,6 +77,7 @@ const createUserAndDueController = async (req, res, next) => {
       total,
       accountReceived,
       due,
+      user_name,
     };
     const newDue = new Due(dueData);
     await newDue.save();
