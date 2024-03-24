@@ -125,8 +125,36 @@ const findBy1stNumberController = async (req, res, next) => {
   }
 };
 
+const findAllPhoneWithDueController = async (req, res, next) => {
+  try {
+    // const { firstFourDigits } = req.params; // Assuming you pass firstFourDigits in the request parameters
+    // const firstFourDigits = req.body.firstFourDigits; // Assuming you pass firstFourDigits in the request parameters
+
+    // Find users whose phone numbers match the provided first four digits
+    const users = await User.find();
+
+    // Find dues associated with the found users
+    const dueList = await Due.find({
+      userId: { $in: users.map((user) => user._id) },
+    });
+
+    // Combine user and due information
+    const result = users.map((user) => {
+      const userDues = dueList.filter(
+        (due) => due.userId.toString() === user._id.toString()
+      );
+      return { user, dues: userDues };
+    });
+
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   findAndCheckDueController,
   createUserAndDueController,
   findBy1stNumberController,
+  findAllPhoneWithDueController,
 };

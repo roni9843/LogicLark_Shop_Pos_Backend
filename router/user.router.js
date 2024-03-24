@@ -2,11 +2,14 @@ const {
   findAndCheckDueController,
   createUserAndDueController,
   findBy1stNumberController,
+  findAllPhoneWithDueController,
 } = require("../controller/User.Controller");
 
 const router = require("express").Router();
 
 router.post("/findAndCheckDue", findAndCheckDueController);
+
+router.post("/findAllPhoneWithDue", findAllPhoneWithDueController);
 
 router.post("/createUserAndDue", createUserAndDueController);
 
