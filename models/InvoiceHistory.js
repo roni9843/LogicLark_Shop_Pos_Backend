@@ -1,9 +1,14 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-// Define the Due schema
-const dueSchema = new Schema({
+// Define the InvoiceHistorySchema
+const InvoiceHistorySchema = new Schema({
   userId: {
+    type: Schema.Types.ObjectId,
+    ref: "User", // Reference to the User schema
+    required: true,
+  },
+  inId: {
     type: Schema.Types.ObjectId,
     ref: "User", // Reference to the User schema
     required: true,
@@ -43,8 +48,13 @@ const dueSchema = new Schema({
     type: Number,
     required: true,
   },
+  due_history: {
+    type: Number,
+    require: false,
+    default: 0,
+  },
 });
 
 // Create and export the Due model
-const Due = mongoose.model("Due", dueSchema);
-module.exports = Due;
+const InvoiceHistory = mongoose.model("InvoiceHistory", InvoiceHistorySchema);
+module.exports = InvoiceHistory;

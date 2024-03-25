@@ -1,4 +1,5 @@
-const Due = require("../models/Due");
+const DueReceived = require("../models/DueReceived");
+const InvoiceHistory = require("../models/InvoiceHistory");
 const User = require("../models/User");
 
 /**
@@ -9,22 +10,24 @@ const User = require("../models/User");
  * * return not found
  */
 const findAndCheckDueController = async (req, res, next) => {
-  const { user_phone } = req.body;
-
-  console.log("user phone -> ", user_phone);
+  const { userId } = req.body; // Assuming userId is provided in the request body
 
   try {
-    // Find the user by phone number
-    const user = await User.findOne({ user_phone });
+    // Find the user by user ID
+    const user = await User.findById(userId);
 
     if (user) {
-      // If user found, find all due records for this user
-      const dues = await Due.find({ userId: user._id });
+      // If user found, find all InvoiceHistory records for this user
+      const invoiceHistories = await InvoiceHistory.find({ userId });
+
+      // Find all DueReceived records for this user
+      const dueReceived = await DueReceived.find({ userId });
 
       return res.status(200).json({
         message: "User found successfully",
         user,
-        dues: dues, // Return all due records for the user
+        invoiceHistories,
+        dueReceived,
       });
     } else {
       // If user not found, return "not found" message
@@ -46,31 +49,36 @@ const findAndCheckDueController = async (req, res, next) => {
  */
 const createUserAndDueController = async (req, res, next) => {
   const {
+    user_name,
     user_phone,
+    inId,
     details,
     subTotal,
     discount,
     total,
     accountReceived,
     due,
-    user_name,
   } = req.body;
 
-  console.log("this is log ", req.body);
-
   try {
-    // Find the user by phone number
+    // Find or create the user by phone number
     let user = await User.findOne({ user_phone });
 
     if (!user) {
       // If user not found, create a new user
       user = new User({ user_phone, user_name });
-      await user.save();
     }
 
-    // Create due for the user
+    // Save the previous due_amount as due_history
+    const previousDueHistory = user.due_amount || 0;
+
+    // Calculate new due amount
+    const newDueAmount = previousDueHistory + due;
+
+    // Create the due for the user
     const dueData = {
-      userId: user._id, // Use the user's ID
+      userId: user._id,
+      inId,
       details,
       subTotal,
       discount,
@@ -78,14 +86,20 @@ const createUserAndDueController = async (req, res, next) => {
       accountReceived,
       due,
       user_name,
+      due_history: previousDueHistory, // Save the previous due_amount as due_history
     };
-    const newDue = new Due(dueData);
-    await newDue.save();
+
+    const InvoiceHis = new InvoiceHistory(dueData);
+    await InvoiceHis.save();
+
+    // Update user's due_amount
+    user.due_amount = newDueAmount;
+    await user.save();
 
     return res.status(201).json({
       message: "User and due created successfully",
       user,
-      due: newDue,
+      Invoice: InvoiceHis,
     });
   } catch (error) {
     // Handle errors
@@ -100,28 +114,21 @@ const createUserAndDueController = async (req, res, next) => {
 
 const findBy1stNumberController = async (req, res, next) => {
   try {
-    // const { firstFourDigits } = req.params; // Assuming you pass firstFourDigits in the request parameters
-    const firstFourDigits = req.body.firstFourDigits; // Assuming you pass firstFourDigits in the request parameters
+    let { firstDigits } = req.body; // Assuming you pass firstDigits in the request body
+    // Ensure at least 4 characters are provided
+    if (firstDigits.length < 4) {
+      return res.status(400).json({ error: "Provide at least 4 characters." });
+    }
 
-    // Find users whose phone numbers match the provided first four digits
+    // Construct regex pattern based on the provided digits
+    const regexPattern = `^${firstDigits.substring(0, 4)}`;
+
+    // Find users whose phone numbers match the provided first four or five digits
     const users = await User.find({
-      user_phone: { $regex: `^${firstFourDigits}` },
+      user_phone: { $regex: regexPattern },
     });
 
-    // Find dues associated with the found users
-    const dueList = await Due.find({
-      userId: { $in: users.map((user) => user._id) },
-    });
-
-    // Combine user and due information
-    const result = users.map((user) => {
-      const userDues = dueList.filter(
-        (due) => due.userId.toString() === user._id.toString()
-      );
-      return { user, dues: userDues };
-    });
-
-    res.json(result);
+    res.json(users);
   } catch (error) {
     next(error);
   }
@@ -135,20 +142,7 @@ const findAllPhoneWithDueController = async (req, res, next) => {
     // Find users whose phone numbers match the provided first four digits
     const users = await User.find();
 
-    // Find dues associated with the found users
-    const dueList = await Due.find({
-      userId: { $in: users.map((user) => user._id) },
-    });
-
-    // Combine user and due information
-    const result = users.map((user) => {
-      const userDues = dueList.filter(
-        (due) => due.userId.toString() === user._id.toString()
-      );
-      return { user, dues: userDues };
-    });
-
-    res.json(result);
+    res.json(users);
   } catch (error) {
     next(error);
   }

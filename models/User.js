@@ -11,6 +11,11 @@ const userSchema = new Schema({
     type: String,
     required: true, // Mandatory field
   },
+  due_amount: {
+    type: Number,
+    required: false, // Optional field
+    default: 0,
+  },
   user_address: {
     type: String,
     required: false, // Optional field
