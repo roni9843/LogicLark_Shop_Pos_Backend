@@ -203,7 +203,7 @@ const getInvoiceIdController = async () => {
   let today = new Date();
   today = today.getDate();
 
-  let strSerialNumber = 0; // Default value if inId is empty or null
+  let strSerialNumber = "0"; // Default value if inId is empty or null
 
   if (latestInvoice && latestInvoice.inId) {
     strSerialNumber = latestInvoice.inId;
