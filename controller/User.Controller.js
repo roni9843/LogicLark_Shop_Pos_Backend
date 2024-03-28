@@ -128,7 +128,66 @@ const findBy1stNumberController = async (req, res, next) => {
       user_phone: { $regex: regexPattern },
     });
 
-    res.json(users);
+    // Get the latest invoice ID
+    const latestInvoice = await InvoiceHistory.findOne({})
+      .sort({ buyDate: -1 }) // Sort by buyDate in descending order
+      .exec();
+
+    let today = new Date();
+    today.setDate(today.getDate() + 1);
+    today = today.getDate();
+
+    const strSerialNumber = latestInvoice.inId; // Example output "202403280002-vf5y"
+    let extractedSerialNumber = strSerialNumber.substring(8, 12); // Example output "0002"
+    const extractedDayValue = strSerialNumber.substring(6, 8); // Example output "28"
+
+    if (parseInt(extractedDayValue) !== today) {
+      extractedSerialNumber = "0";
+    }
+
+    let serialNumber = parseInt(extractedSerialNumber);
+
+    function generateRandomString(length) {
+      const characters =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+      let randomString = "";
+      for (let i = 0; i < length; i++) {
+        randomString += characters.charAt(
+          Math.floor(Math.random() * characters.length)
+        );
+      }
+      return randomString;
+    }
+
+    function generateInvoiceNumber() {
+      const date = new Date();
+      const year = date.getFullYear().toString(); // Get last two digits of the year
+      const month = (date.getMonth() + 1).toString().padStart(2, "0"); // Get month with leading zero if needed
+      const day = date.getDate().toString().padStart(2, "0"); // Get day with leading zero if needed
+
+      serialNumber++; // Increment the serial number
+
+      // Pad the serial number with leading zeros to make it 4 digits
+      const paddedSerialNumber = serialNumber.toString().padStart(4, "0");
+
+      // Generate a random string of length 3
+      const randomString = "-" + generateRandomString(4);
+
+      // Concatenate date and time components with the padded serial number and random string to form the invoice number
+      const invoiceNumber = `${year}${month}${day}${paddedSerialNumber}${randomString}`;
+
+      return invoiceNumber;
+    }
+
+    const invoiceNumber1 = generateInvoiceNumber();
+
+    res.send({
+      users: users,
+      previousInvoiceNumber: strSerialNumber,
+      previousNumber: extractedSerialNumber,
+      today,
+      newInvoiceNumber: invoiceNumber1,
+    });
   } catch (error) {
     next(error);
   }
@@ -192,19 +251,10 @@ const createDueController = async (req, res, next) => {
   }
 };
 
-const getInvoiceIdController = async (req, res, next) => {
-  const latestInvoice = await InvoiceHistory.findOne({})
-    .sort({ buyDate: -1 }) // Sort by buyDate in descending order
-    .exec();
-
-  res.send(latestInvoice.inId);
-};
-
 module.exports = {
   findAndCheckDueController,
   createUserAndDueController,
   findBy1stNumberController,
   findAllPhoneWithDueController,
   createDueController,
-  getInvoiceIdController,
 };
