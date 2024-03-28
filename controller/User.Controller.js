@@ -200,13 +200,14 @@ const getInvoiceIdController = async () => {
     .sort({ buyDate: -1 }) // Sort by buyDate in descending order
     .exec();
 
-  //  const today = new Date().getDate(); // Get today's date day
-
   let today = new Date();
-  //  today.setDate(today.getDate() + 1);
   today = today.getDate();
 
-  const strSerialNumber = latestInvoice.inId; // Example output "202403280002-vf5y"
+  let strSerialNumber = 0; // Default value if inId is empty or null
+
+  if (latestInvoice && latestInvoice.inId) {
+    strSerialNumber = latestInvoice.inId;
+  }
   let extractedSerialNumber = strSerialNumber.substring(8, 12); // Example output "0002"
   const extractedDayValue = strSerialNumber.substring(6, 8); // Example output "28"
 
