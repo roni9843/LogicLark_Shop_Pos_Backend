@@ -3,8 +3,8 @@ const mongoose = require("mongoose");
 // Define the DueReceived schema
 const dueReceivedSchema = new mongoose.Schema({
   receive_id: {
-    type: mongoose.Schema.Types.ObjectId, // Assuming you're linking to another collection
-    ref: "User", // Referencing the User collection
+    type: String, // Assuming you're linking to another collection
+
     required: true,
   },
   userId: {
