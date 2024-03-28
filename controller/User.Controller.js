@@ -192,10 +192,19 @@ const createDueController = async (req, res, next) => {
   }
 };
 
+const getInvoiceIdController = async (req, res, next) => {
+  const latestInvoice = await InvoiceHistory.findOne({})
+    .sort({ buyDate: -1 }) // Sort by buyDate in descending order
+    .exec();
+
+  res.send(latestInvoice.inId);
+};
+
 module.exports = {
   findAndCheckDueController,
   createUserAndDueController,
   findBy1stNumberController,
   findAllPhoneWithDueController,
   createDueController,
+  getInvoiceIdController,
 };

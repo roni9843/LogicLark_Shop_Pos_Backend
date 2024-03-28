@@ -9,8 +9,7 @@ const InvoiceHistorySchema = new Schema({
     required: true,
   },
   inId: {
-    type: Schema.Types.ObjectId,
-    ref: "User", // Reference to the User schema
+    type: String,
     required: true,
   },
   buyDate: {
