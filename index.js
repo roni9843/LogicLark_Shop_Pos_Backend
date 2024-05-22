@@ -28,7 +28,7 @@ app.get("/private", (req, res) => {
 //? create root route
 app.get("/", (req, res) => {
   res.send({
-    message: "this is root route",
+    message: "this is root route __ hasan pos server",
   });
 });
 
