@@ -199,6 +199,50 @@ const createDueController = async (req, res, next) => {
   }
 };
 
+const createNewDueController = async (req, res, next) => {
+  // Extract data from the request body
+  const {
+    receive_id,
+    userId,
+    date,
+    received_amount, // receive amount
+    previous_due, // total all due
+    due_history, // old due
+  } = req.body;
+
+  console.log(req.body);
+
+  try {
+    // Create a new due record
+    const newDue = new DueReceived({
+      receive_id,
+      userId,
+      date,
+      received_amount,
+      previous_due,
+      due_history,
+    });
+
+    // Save the new due record
+    await newDue.save();
+
+    let user = await User.findById(userId);
+
+    // Update user's due_amount
+    user.due_amount = previous_due;
+
+    console.log(user, userId);
+
+    await user.save();
+
+    // After saving the new due, call the findAndCheckDueController
+    await findAndCheckDueController(req, res, next);
+  } catch (error) {
+    // Handle errors
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
 const getInvoiceIdController = async () => {
   const latestInvoice = await InvoiceHistory.findOne({})
     .sort({ buyDate: -1 }) // Sort by buyDate in descending order
@@ -273,4 +317,5 @@ module.exports = {
   findBy1stNumberController,
   findAllPhoneWithDueController,
   createDueController,
+  createNewDueController,
 };
